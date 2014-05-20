@@ -1,0 +1,12 @@
+incluir na ASTree
+     isPointer
+     lineNumber
+
+pt = &a ok
+pt2 = pt ok
+pt2 = a notok
+a = b notok (a word b bool)
+pt2 = b notok
+b = $pt ok
+
+imprimir no console os erros
