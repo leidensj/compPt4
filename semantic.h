@@ -19,8 +19,12 @@ int checkOperationTypes(int expr1, int expr2);
 
 int checkResultOperTypes(int verified, int expr1, int expr2, int lineNumber);
 
+checkParamsFuncAux(ASTREE *ast, ASTREE *node);
+
 int checkParamsFunc(ASTREE *ast, ASTREE *filho);
 
 void checkUndeclared();
+
+int getErrorNumber();
 
 #endif

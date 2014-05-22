@@ -19,12 +19,14 @@ ASTREE* astCreate(int type, HASH_NODE* symbol, ASTREE* s0, ASTREE* s1, ASTREE* s
      ASTREE* node;
      node = (ASTREE*) calloc(1,sizeof(ASTREE));
      node->type = type;
+     node->semanticChecked = 0;
      node->symbol = symbol;
      node->son[0] = s0;
      node->son[1] = s1;
      node->son[2] = s2;
      node->son[3] = s3;
      node->printed = 0;
+     node->lineNumber = getLineNumber();
      return node;
 }
 
@@ -308,4 +310,14 @@ void astPrintTree(ASTREE* root, int level)
 
      for(i = 0; i<MAX_SONS; ++i)
           astPrintTree(root->son[i], level +1);
+}
+
+int dataTypeMap(int astType)
+{
+     switch (astType)
+     {
+          case AST_KW_WORD: return DATATYPE_KW_WORD;
+          case AST_KW_BYTE: return DATATYPE_KW_BYTE;
+          case AST_KW_BOOL: return DATATYPE_KW_BOOL;
+     }
 }

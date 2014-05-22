@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "astree.h"
-//#include "hash.h"
-
+#include "semantic.h"
+struct ASTREE *root;
 %}
 
 %union{
@@ -69,7 +69,11 @@ int number;
 %%
 
 program
-		: global_decl												{astPrintTree($1,0);}
+		: global_decl												{root = $1;
+																	 checkDeclaration($1); 
+																	 checkUndeclared(); 
+																	 checkUtilization($1, $1); 
+																	 astPrintTree($1,0);}
 		;
 	
 
@@ -80,10 +84,14 @@ global_decl
 		;
 
 decl
-		: spec_type TK_IDENTIFIER vector_size ';'					{$$ = astCreate(AST_DECL_VECTOR,$2,$1,$3,0,0);}
-		| spec_type TK_IDENTIFIER vector_size ':' init_vec_value ';'{$$ = astCreate(AST_DECL_VECTOR_INITVALUE,$2,$1,$3,$5,0);}
-		| spec_type TK_IDENTIFIER ':' init_value ';'				{$$ = astCreate(AST_DECL,$2,$1,$4,0,0);}
-		| spec_type '$' TK_IDENTIFIER ':' init_value ';'			{$$ = astCreate(AST_DECL_POINTER,$3,$1,$5,0,0);}
+		: spec_type TK_IDENTIFIER vector_size ';'					{$$ = astCreate(AST_DECL_VECTOR,$2,$1,$3,0,0); 
+																	 $2->content.dataType = dataTypeMap($1->type);}
+		| spec_type TK_IDENTIFIER vector_size ':' init_vec_value ';'{$$ = astCreate(AST_DECL_VECTOR_INITVALUE,$2,$1,$3,$5,0); 
+																	 $2->content.dataType = dataTypeMap($1->type);}
+		| spec_type TK_IDENTIFIER ':' init_value ';'				{$$ = astCreate(AST_DECL,$2,$1,$4,0,0);
+																	 $2->content.dataType = dataTypeMap($1->type);}
+		| spec_type '$' TK_IDENTIFIER ':' init_value ';'			{$$ = astCreate(AST_DECL_POINTER,$3,$1,$5,0,0);
+																	 $3->content.dataType = dataTypeMap($1->type);}
 		;
 
 vector_size
@@ -101,9 +109,9 @@ init_vec_value
 
 // a funcao eh definida pelo seu tipo, seguido pelo ientificador, parametros e bloco(s)
 function
-		: spec_type TK_IDENTIFIER '(' parameters ')'  cmd ';' 		{$$ = astCreate(AST_FUNCTION_DECL,$2,$1,$4,$6,0);}
+		: spec_type TK_IDENTIFIER '(' parameters ')'  cmd ';' 		{$$ = astCreate(AST_FUNCTION_DECL,$2,$1,$4,$6,0); 
+																 	 $2->content.dataType = dataTypeMap($1->type);}
 		;
-
 
 // tipos podem ser WORD, BYTE e BOOL
 spec_type
@@ -114,12 +122,14 @@ spec_type
 
 // lista de parametros da funcao, que pode tambem ser vazia
 parameters    
-		: spec_type TK_IDENTIFIER more_parameters 					{$$ = astCreate(AST_FUNCT_PARAMS,$2,$1,$3,0,0);}
+		: spec_type TK_IDENTIFIER more_parameters 					{$$ = astCreate(AST_FUNCT_PARAMS,$2,$1,$3,0,0);
+																	 $2->content.dataType = dataTypeMap($1->type);}
 		| 															{$$ = 0;}
 		;
 
 more_parameters
-		: ',' spec_type TK_IDENTIFIER more_parameters 				{$$ = astCreate(AST_FUNCT_MORE_PARAMS,$3,$2,$4,0,0);}
+		: ',' spec_type TK_IDENTIFIER more_parameters 				{$$ = astCreate(AST_FUNCT_MORE_PARAMS,$3,$2,$4,0,0);
+																	 $3->content.dataType = dataTypeMap($2->type);}
 		|															{$$ = 0;}	 
 		;
 

@@ -40,15 +40,15 @@ special [,;:\(\)\[\]\{\}\+\-\*\/<>=!&\$]
 "&&"                               return OPERATOR_AND;
 "||"                               return OPERATOR_OR;
 
-"false"                            { yylval.symbol = hashInsert(yytext, LIT_FALSE); return LIT_FALSE; }
-"true"                             { yylval.symbol = hashInsert(yytext, LIT_TRUE); return LIT_TRUE; }
+"false"                            { yylval.symbol = hashInsert(yytext, SYMBOL_LIT_FALSE); return LIT_FALSE; }
+"true"                             { yylval.symbol = hashInsert(yytext, SYMBOL_LIT_TRUE); return LIT_TRUE; }
 
 {special}                          { return yytext[0]; }
-{digit}+                           { yylval.symbol = hashInsert(yytext, LIT_INTEGER); return LIT_INTEGER; }
-\"([^\n\"])*\"                     { yylval.symbol = hashInsert(yytext, LIT_STRING); return LIT_STRING; }
-\'.\'                              { yylval.symbol = hashInsert(yytext, LIT_CHAR); return LIT_CHAR; }
-{letter}({letter}|{digit})*        { yylval.symbol = hashInsert(yytext, TK_IDENTIFIER); return TK_IDENTIFIER; }
-{digit}({letter}|{digit})+         { yylval.symbol = hashInsert(yytext, TK_IDENTIFIER); return TK_IDENTIFIER; }
+{digit}+                           { yylval.symbol = hashInsert(yytext, SYMBOL_LIT_INTEGER); return LIT_INTEGER; }
+\"([^\n\"])*\"                     { yylval.symbol = hashInsert(yytext, SYMBOL_LIT_STRING); return LIT_STRING; }
+\'.\'                              { yylval.symbol = hashInsert(yytext, SYMBOL_LIT_CHAR); return LIT_CHAR; }
+{letter}({letter}|{digit})*        { yylval.symbol = hashInsert(yytext, SYMBOL_TK_IDENTIFIER); return TK_IDENTIFIER; }
+{digit}({letter}|{digit})+         { yylval.symbol = hashInsert(yytext, SYMBOL_TK_IDENTIFIER); return TK_IDENTIFIER; }
 
 [ \t]
 .                                  { return TOKEN_ERROR; }

@@ -21,16 +21,16 @@ void createTokenContent(TOKEN_CONTENT *content, int type, char *text)
     
     switch (type) 
     {
-        case LIT_INTEGER:
+        case SYMBOL_LIT_INTEGER:
             content->wordVal = atoi(text);
             break;
-        case LIT_CHAR:
+        case SYMBOL_LIT_CHAR:
             content->charVal = text[1];
             break;
-        case LIT_TRUE:
+        case SYMBOL_LIT_TRUE:
             content->boolVal = 1;
             break;
-        case LIT_FALSE:
+        case SYMBOL_LIT_FALSE:
             content->boolVal = 0;
             break;
     }

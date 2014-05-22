@@ -62,15 +62,16 @@
 typedef struct astreenode
 {
      int type;
+     int semanticChecked;
      HASH_NODE* symbol;
      struct astreenode* son[MAX_SONS];
      int printed;
-     int alreadyDeclared;
+     int lineNumber;
 } ASTREE;
 
 ASTREE* astCreate(int type, HASH_NODE* symbol, ASTREE* s0, ASTREE* s1, ASTREE* s2, ASTREE* s3);
 void astPrintSingle(ASTREE* node);
 void astPrintTree(ASTREE* root, int level);
 void astGetOutputFileName(char *fn);
-
+int dataTypeMap(int astType);
 #endif
