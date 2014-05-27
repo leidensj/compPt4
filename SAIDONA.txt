@@ -1,32 +1,32 @@
 word a:0;
-word v[10]:0 0 0 0 0 0 0 0 0 0;
+word v[10]:0 0 'a' 0 0 0 0 0 0 0;
 word mat[1000];
 word $pt:0;
+bool b:0;
 word main()
 {
 output "Digite um numero: "
 loop
 {
-c = 110
-a = incn(a, 1)
-i = i + 1
+a = incn(a, b)
 }
-(i < 10)
+(false)
 if(true) else
 return x
 then
 return x + n
+g = a
 output "Incrementado algumas vezes fica ", a, "\n"
 }
 ;
-word incn(word x, word x)
-return x + n
+word incn(bool y, word x)
+return g
 ;
-word outra(word x, word n)
+word outra(word z, word n)
 if(x < n) else
-return x - n
+return b
 then
-return x + n
+return g
 ;
 word maisuma()
 {

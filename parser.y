@@ -90,8 +90,7 @@ decl
 																	 $2->content.dataType = dataTypeMap($1->type);}
 		| spec_type TK_IDENTIFIER ':' init_value ';'				{$$ = astCreate(AST_DECL,$2,$1,$4,0,0);
 																	 $2->content.dataType = dataTypeMap($1->type);}
-		| spec_type '$' TK_IDENTIFIER ':' init_value ';'			{$$ = astCreate(AST_DECL_POINTER,$3,$1,$5,0,0);
-																	 $3->content.dataType = dataTypeMap($1->type);}
+		| spec_type '$' TK_IDENTIFIER ':' init_value ';'			{$$ = astCreate(AST_DECL_POINTER,$3,$1,$5,0,0);}
 		;
 
 vector_size
@@ -100,11 +99,20 @@ vector_size
 
 init_value
 		: LIT_INTEGER 												{$$ = astCreate(AST_LIT_INTEGER,$1,0,0,0,0);} 
+		| LIT_TRUE													{$$ = astCreate(AST_LIT_TRUE,$1,0,0,0,0);}
+		| LIT_FALSE    												{$$ = astCreate(AST_LIT_FALSE,$1,0,0,0,0);}
+		| LIT_CHAR    												{$$ = astCreate(AST_LIT_CHAR,$1,0,0,0,0);}
 		;
 
 init_vec_value
 		: LIT_INTEGER 												{$$ = astCreate(AST_LIT_INTEGER,$1,0,0,0,0);} 
-		| LIT_INTEGER init_vec_value 								{$$ = astCreate(AST_INIT_VEC_VALUES,$1,$2,0,0,0);} 
+		| LIT_INTEGER init_vec_value 								{$$ = astCreate(AST_INIT_VEC_VALUES,$1,$2,0,0,0);}
+		| LIT_CHAR 													{$$ = astCreate(AST_LIT_CHAR,$1,0,0,0,0);}
+		| LIT_CHAR init_vec_value 									{$$ = astCreate(AST_INIT_VEC_VALUES,$1,$2,0,0,0);}
+		| LIT_TRUE 													{$$ = astCreate(AST_LIT_TRUE,$1,0,0,0,0);}
+		| LIT_TRUE init_vec_value 									{$$ = astCreate(AST_INIT_VEC_VALUES,$1,$2,0,0,0);}
+		| LIT_FALSE 												{$$ = astCreate(AST_LIT_FALSE,$1,0,0,0,0);}
+		| LIT_FALSE init_vec_value 									{$$ = astCreate(AST_INIT_VEC_VALUES,$1,$2,0,0,0);}
 		;
 
 // a funcao eh definida pelo seu tipo, seguido pelo ientificador, parametros e bloco(s)
@@ -213,11 +221,8 @@ using_parameter
 
 int yyerror(char* str)
 {
-     printf("╔═╗╦═╗╦═╗╔═╗\n");
-     printf("║╣ ╠╦╝╠╦╝║ ║\n");
-     printf("╚═╝╩╚═╩╚═╚═╝\n");
-     fflush(stderr);
-     fprintf(stderr,"Erro: \"%s\"\t na linha: %d\n", str, getLineNumber());
+    fflush(stderr);
+    fprintf(stderr,"Erro na analise sintatica (retorno 3): \"%s\"\t na linha: %d\n", str, getLineNumber());
 	exit(3);
 }
 

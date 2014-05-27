@@ -62,7 +62,6 @@
 typedef struct astreenode
 {
      int type;
-     int semanticChecked;
      HASH_NODE* symbol;
      struct astreenode* son[MAX_SONS];
      int printed;

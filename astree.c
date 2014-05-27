@@ -19,7 +19,6 @@ ASTREE* astCreate(int type, HASH_NODE* symbol, ASTREE* s0, ASTREE* s1, ASTREE* s
      ASTREE* node;
      node = (ASTREE*) calloc(1,sizeof(ASTREE));
      node->type = type;
-     node->semanticChecked = 0;
      node->symbol = symbol;
      node->son[0] = s0;
      node->son[1] = s1;

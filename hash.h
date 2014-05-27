@@ -11,13 +11,16 @@
 #define SYMBOL_LIT_CHAR       6
 #define SYMBOL_LIT_STRING     7
 
-#define SYMBOL_VARIABLE       8
-#define SYMBOL_VECTOR         9
-#define SYMBOL_FUNCTION       10
+#define SYMBOL_TYPE_VAR       8
+#define SYMBOL_TYPE_FUNC      9
+#define SYMBOL_TYPE_VEC       10
+#define SYMBOL_TYPE_PTR       11
+#define SYMBOL_TYPE_FPAR      12
 
 #define DATATYPE_KW_WORD      1
-#define DATATYPE_KW_BYTE      3
-#define DATATYPE_KW_BOOL      4
+#define DATATYPE_KW_BYTE      2
+#define DATATYPE_KW_BOOL      3
+
 
 typedef struct {
      char *text;
