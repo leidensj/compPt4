@@ -5,15 +5,9 @@
 
 int erro;
 
-void checkDeclarationFuncParam(ASTREE *node, ASTREE *functionNode);
+void retrieveFuncDeclaration(ASTREE *ast, ASTREE *nodeToRetrieve);
 
 void checkDeclaration(ASTREE *root);
-
-void checkVarDeclAsFunc(ASTREE *ast, char *text);
-
-void checkVarDeclAsVector(ASTREE *ast, char *text);
-
-void checkFuncCall(ASTREE *ast, char *text);
 
 void checkUtilization(ASTREE *root, ASTREE *rootAux);
 

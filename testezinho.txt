@@ -1,0 +1,23 @@
+word a:1;
+//
+//
+//
+//
+word v[10];
+word $pt:0;
+bool b:0;
+word i:0;
+word main ()
+{
+     //BEI
+     a = $pt
+     //BEI
+     //BEI
+     return b
+     //BEI
+     //BEI
+     //BEI
+     //BEI
+     //BEI
+     return b         //ERROR
+};

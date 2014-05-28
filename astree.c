@@ -305,6 +305,8 @@ void astPrintTree(ASTREE* root)
      if(root == 0)
           return;
 
+     astPrintSingle(root);
+
      for(i = 0; i<MAX_SONS; ++i)
           astPrintTree(root->son[i]);
 }

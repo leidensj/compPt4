@@ -25,13 +25,14 @@ int main(int argv, char **argc)
     yyin = fopen(argc[1],"r");
     astGetOutputFileName(argc[2]);
     printf("╔═══════════════════════════════════════════════════════════════════════\n");
+    printf("║ETAPA 4 - ANALISE SEMANTICA");
     printf("║Arquivo de entrada: %s\n", argc[1]);
     printf("║Arquivo de saida: %s\n", argc[2]);
     printf("╚═══════════════════════════════════════════════════════════════════════\n");
 
     yyparse();
     int error = getErrorNumber();
-    hashPrint();
+    //hashPrint();
     if(error == 4)
     {
         printf("\nErro de semantica: Saindo com erro 4\n");

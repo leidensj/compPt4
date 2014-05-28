@@ -22,6 +22,7 @@ special [,;:\(\)\[\]\{\}\+\-\*\/<>=!&\$]
 
 %%
 
+\n                                 { ++ lineNumber; }
 "word"                             return KW_WORD;
 "bool"                             return KW_BOOL;
 "byte"                             return KW_BYTE;
@@ -43,6 +44,7 @@ special [,;:\(\)\[\]\{\}\+\-\*\/<>=!&\$]
 "false"                            { yylval.symbol = hashInsert(yytext, SYMBOL_LIT_FALSE); return LIT_FALSE; }
 "true"                             { yylval.symbol = hashInsert(yytext, SYMBOL_LIT_TRUE); return LIT_TRUE; }
 
+"//".*                             {}
 {special}                          { return yytext[0]; }
 {digit}+                           { yylval.symbol = hashInsert(yytext, SYMBOL_LIT_INTEGER); return LIT_INTEGER; }
 \"([^\n\"])*\"                     { yylval.symbol = hashInsert(yytext, SYMBOL_LIT_STRING); return LIT_STRING; }
@@ -52,9 +54,6 @@ special [,;:\(\)\[\]\{\}\+\-\*\/<>=!&\$]
 
 [ \t]
 .                                  { return TOKEN_ERROR; }
-"\n"                               { ++ lineNumber; }
-
-"//".*	
 
 "/*"                               { BEGIN(COMM); }
 <COMM>"*/"                         { BEGIN(INITIAL); }
