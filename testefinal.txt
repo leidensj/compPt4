@@ -1,0 +1,55 @@
+word a:1;
+word a:1;
+word v[10];
+word $pt:0;
+byte i: 'a';
+
+word main (bool b)
+{
+     a = xis
+     a = a
+     loop
+     {
+          output "Digite um numero:"
+          input a
+          a = a
+          a = v[5]
+          a = incn(5,6)
+          v[5] = 2
+          i = 10 + 20
+          i = 10 + 20 + 55 + 23 +((233+1) + 'A')
+          a = 'a'
+          pt = &a
+          a = $pt
+          pt = pt + 1
+          b = (i < 10)
+          
+          //ERRORS
+          a = v               //ERROR
+          a = v[v]            //ERROR
+          a = a[1]            //ERROR
+          a = incn[1]         //ERROR
+          a = a(5)            //ERROR
+          a = v(5)            //ERROR
+          a = incn(5)         //ERROR
+          a = incn(5,6,7)     //ERROR
+          v = 2               //ERROR
+          a[5] = 2            //ERROR
+          incn[5] = 2         //ERROR
+          pt = pt/2           //ERROR
+          a = (i < 10)        //ERROR
+          a = pt + 1          //ERROR
+     }(i<10)
+     
+     output "Resultado das contas estranhas: ", a, "\n"
+     return incn         //ERROR
+};
+
+word incn (word x, word n)
+{
+     x = 1
+     x = 2
+     x = 3
+     x = 4
+     return x+n
+};

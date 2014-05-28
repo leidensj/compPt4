@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include "astree.h"
 #include "semantic.h"
-struct ASTREE *root;
 %}
 
 %union{
@@ -69,7 +68,7 @@ int number;
 %%
 
 program
-		: global_decl												{root = $1;
+		: global_decl												{initializeSemantic($1);
 																	 checkDeclaration($1); 
 																	 checkUndeclared(); 
 																	 checkUtilization($1, $1); 
@@ -182,8 +181,8 @@ expression
 		| expression '/' expression									{$$ = astCreate(AST_DIV,0,$1,$3,0,0);}
 		| expression '>' expression									{$$ = astCreate(AST_HIGHER,0,$1,$3,0,0);}
 		| expression '<' expression									{$$ = astCreate(AST_LOWER,0,$1,$3,0,0);}
-		| '$' TK_IDENTIFIER											{$$ = astCreate(AST_POINTER,$2,0,0,0,0);} 	 // NAO SEI SE TA CERTO
-		| '&' TK_IDENTIFIER		  									{$$ = astCreate(AST_POINTER_REF,$2,0,0,0,0);}// NAO SEI SE TA CERTO
+		| '$' TK_IDENTIFIER											{$$ = astCreate(AST_POINTER,$2,0,0,0,0);}
+		| '&' TK_IDENTIFIER		  									{$$ = astCreate(AST_POINTER_REF,$2,0,0,0,0);}
 		| '(' expression ')'		  								{$$ = astCreate(AST_EXPR_W_BRACKETS,0,$2,0,0,0);}
 		| '!' expression		  									{$$ = astCreate(AST_NOT,0,$2,0,0,0);}
 		| expression OPERATOR_AND expression  						{$$ = astCreate(AST_OPERATOR_AND,0,$1,$3,0,0);}

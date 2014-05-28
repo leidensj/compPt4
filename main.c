@@ -74,8 +74,8 @@ int main(int argv, char **argc)
     printf("╚═╗║ ║║  ║╣ ╚═╗╚═╗║ ║\n");
     printf("╚═╝╚═╝╚═╝╚═╝╚═╝╚═╝╚═╝\n");
     printf("Analise sintatica feita com sucesso. Nenhum erro encontrado.\n");
-    printf("Numero de linhas do arquivo de entrada: %d\n", getLineNumber());
+    printf("Numero de linhas do arquivo de entrada: %d\n", getLineNumber());*/
     printf("TABELA HASH\n-----------\n");
-    hashPrint();*/
+    hashPrint();
     exit(0);
 }

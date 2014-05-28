@@ -9,13 +9,29 @@
 #define CHECKPARAMFUNC_ERROR5 5
 #define CHECKPARAMFUNC_ERROR6 6
 
+#define RET_UNKNOWN 		  0
+#define RET_WORD 			  1
+#define RET_WORD_PTR          2
+#define RET_BYTE              3
+#define RET_BYTE_PTR          4
+#define RET_BOOL              5
+#define RET_BOOL_PTR          6
+#define RET_BYTEWORD		  7
+#define RET_INVALID			  8
+
+
 int guardaTypeRet=0, guardaPtrRet=0;
-ASTREE *funcAst, *funcAstVect;
+ASTREE *funcAst, *funcAstVect, *initialRoot;
 int scalDecl=0, scalDeclVect=0;
 
 int getErrorNumber()
 {
 	return erro;
+}
+
+void initializeSemantic(ASTREE *node)
+{
+	initialRoot = node;
 }
 
 void checkDeclarationFuncParam(ASTREE *node, ASTREE *functionNode)
@@ -28,7 +44,7 @@ void checkDeclarationFuncParam(ASTREE *node, ASTREE *functionNode)
 			{
 				node->symbol->content.ast = (ASTREE*)malloc(sizeof(ASTREE));
 				node->symbol->content.ast = functionNode;
-				node->symbol->content.type = SYMBOL_TYPE_FPAR;
+				node->symbol->content.type = SYMBOL_TYPE_VAR;
 			}
 			else
 			{
@@ -43,7 +59,6 @@ void checkDeclarationFuncParam(ASTREE *node, ASTREE *functionNode)
 void checkDeclaration(ASTREE *root)
 {
 	int i;
-
 	if (root == 0)
 		return;		
 
@@ -144,14 +159,13 @@ void checkUtilization(ASTREE *root, ASTREE *rootAux)
 					switch(result)
 					{
 						case CHECKPARAMFUNC_OK:
-							printf("nenhum erro\n");
 							break;
 						case CHECKPARAMFUNC_ERROR1:
 							printf("ERRO - Linha %d: Funcao %s contem MAIS parametros do que o numero declarado!\n", root->lineNumber, root->symbol->content.text);
 							erro=4;
 							break;
 						case CHECKPARAMFUNC_ERROR2:
-							printf("ERRO -  Linha %d: Funcao %s contem MENOS parametros do que o numero declarado!\n", root->lineNumber, root->symbol->content.text);
+							printf("ERRO - Linha %d: Funcao %s contem MENOS parametros do que o numero declarado!\n", root->lineNumber, root->symbol->content.text);
 							erro=4;
 							break;
 						case CHECKPARAMFUNC_ERROR3:
@@ -194,7 +208,8 @@ void checkUtilization(ASTREE *root, ASTREE *rootAux)
 			}
 			else
 			{
-				verRet = analisaExpressao(root->son[0], rootAux);
+				//verRet = analisaExpressao(root->son[0], rootAux);
+				verRet = 0;
 				if(guardaTypeRet != verRet)
 				{
 					switch(guardaTypeRet)
@@ -204,17 +219,33 @@ void checkUtilization(ASTREE *root, ASTREE *rootAux)
 								printf("AVISO - Linha %d: Retornando BYTE ao inves de WORD!\n", root->lineNumber);		
 							else
 							{
-								printf("ERRO - Linha %d: Retornando BOOL ao inves de WORD!\n", root->lineNumber);
-								erro=4;
+								if(verRet == DATATYPE_KW_BOOL)
+								{
+									printf("ERRO - Linha %d: Retornando BOOL ao inves de WORD!\n", root->lineNumber);
+									erro=4;
+								}
+								else
+								{
+									printf("ERRO - Linha %d: Retornando variavel nao declarada!\n", root->lineNumber);
+									erro=4;
+								}
 							}
 							break;
 						case DATATYPE_KW_BYTE:
 							if(verRet == DATATYPE_KW_WORD)
 								printf("AVISO - Linha %d: Retornando WORD ao inves de BYTE! (possivel perda de representacao)!\n", root->lineNumber);		
-							else if (verRet == DATATYPE_KW_BOOL)
+							else 
 							{
-								printf("ERRO - Linha %d: Retornando BOOL ao inves de BYTE!\n", root->lineNumber);
-								erro=4;
+								if (verRet == DATATYPE_KW_BOOL)
+								{
+									printf("ERRO - Linha %d: Retornando BOOL ao inves de BYTE!\n", root->lineNumber);
+									erro=4;
+								}
+								else
+								{
+									printf("ERRO - Linha %d: Retornando variavel nao declarada!\n", root->lineNumber);
+									erro=4;
+								}
 							}
 							break;
 						case DATATYPE_KW_BOOL:
@@ -223,11 +254,18 @@ void checkUtilization(ASTREE *root, ASTREE *rootAux)
 								printf("ERRO - Linha %d: Retornando WORD ao inves de BOOL!\n", root->lineNumber);
 								erro=4;	
 							}
-
-							else if (verRet == DATATYPE_KW_BYTE)
-							{
-								printf("ERRO - Linha %d: Retornando BYTE ao inves de BOOL!\n", root->lineNumber);
-								erro=4;
+							else
+							{ 
+								if (verRet == DATATYPE_KW_BYTE)
+								{
+									printf("ERRO - Linha %d: Retornando BYTE ao inves de BOOL!\n", root->lineNumber);
+									erro=4;
+								}
+								else
+								{
+									printf("ERRO - Linha %d: Retornando variavel nao declarada!\n", root->lineNumber);
+									erro=4;
+								}
 							}
 							break;
 					}
@@ -321,203 +359,18 @@ void checkUtilization(ASTREE *root, ASTREE *rootAux)
 					if((root->son[1]->son[1] != 0) && (root->son[1]->symbol == 0))						
 						if(root->son[1]->type == (AST_ADD || AST_SUB || AST_MUL || AST_DIV))
 						{
-							printf("ERRO - Line %d: Expressao aritmetica dentro de expressao LOOP!\n", root->lineNumber);
+							printf("ERRO - Linha %d: Expressao aritmetica dentro de expressao LOOP!\n", root->lineNumber);
 							erro=4;
 						}
 				}
 			}
 			break;
-		/*case AST_EQUALS:
-			funcAst = 0;
-			scalDecl = 0;
-			checkVarDeclAsFunc(rootAux, root->son[0]->symbol->content.text);
-			if(scalDecl == 1)
+		case AST_EQUALS:
+			if(analyseExpression(root->son[0]) == RET_INVALID)
 			{
-				if(funcAst->symbol->content.type == SYMBOL_FUNCTION)
-				{
-					printf("ERRO - Linha %d: Variavel %s tem o mesmo nome de uma funcao!\n", root->lineNumber, root->son[0]->symbol->content.text);
-					erro=4;
-				}
+				printf("ERRO - Linha %d: Expressao com termos invalidos ou incompativeis!\n", root->lineNumber);
+				erro=4;
 			}
-			if(root->son[0]->type == AST_SYMBOL)
-			{
-				if(root->son[0]->symbol->content.dataType != 0)
-				{
-					operIgual = analisaExpressao(root->son[1], rootAux);
-					if(operIgual != 0)
-					{
-						if(root->son[0]->symbol->content.dataType != operIgual)
-						{
-							if(root->son[1]->type == AST_EXPR_W_TKIDENTIFIER)
-								if(root->son[1]->symbol->content.type != SYMBOL_FUNCTION)
-								{
-									printf("ERRO - Linha %d: Variavel %s nao e declarada como funcao!\n", root->lineNumber, root->son[1]->symbol->content.text);
-									erro=4;
-								}
-							switch(root->son[0]->symbol->content.dataType)
-							{
-								case DATATYPE_KW_BYTE:
-									if(operIgual == DATATYPE_KW_WORD)
-										printf("AVISO - Linha %d: Perda de precisao. Atribuindo WORD a BYTE!\n", root->lineNumber);
-									else
-									{
-										printf("ERRO - Linha %d: Variaveis contendo tipos diferentes!\n", root->lineNumber);
-										erro=4;
-									}
-									break;
-								case DATATYPE_KW_WORD:
-									if(operIgual == DATATYPE_KW_BOOL)
-									{
-										printf("ERRO - Linha %d: Variaveis contendo tipos diferentes!\n", root->lineNumber);
-										erro=4;
-									}
-									break;
-								case DATATYPE_KW_BOOL:
-									printf("ERRO - Linha %d: Variaveis contendo tipos diferentes!!\n", root->lineNumber);
-									erro=4;
-									break;
-							}
-						}
-						else
-							if(root->son[1]->type == AST_EXPR_W_TKIDENTIFIER)
-								if(root->son[1]->symbol->content.type != SYMBOL_FUNCTION)
-								{
-									printf("ERRO - Linha %d: Variavel %s nao e declarada como funcao!\n", root->lineNumber, root->son[1]->symbol->content.text);
-									erro=4;
-								}
-					}
-				}
-			}
-			else
-			{
-				if(root->son[0]->symbol->content.dataType != 0)
-				{
-					int switchTest = root->son[0]->son[0]->type;
-					if(switchTest == AST_ADD || switchTest == AST_SUB || switchTest == AST_MUL || switchTest == AST_DIV)
-						switchTest = AST_ADD;
-					switch(root->son[0]->son[0]->type)
-					{
-						case AST_LIT_INTEGER:
-							break;
-						case AST_SYMBOL:
-							if(root->son[0]->son[0]->symbol->content.dataType != 1)
-							{
-								if(root->son[0]->son[0]->symbol->content.dataType != 3)
-								{
-									printf("WARNING - Line %d: character variable into the vector!!!\n", root->lineNumber);
-								}
-								else
-								{
-									printf("ERRO - Line %d: Vector %s is being used with wrong parameters inside it. [ NOT VALID 1] !!!\n", root->lineNumber, root->son[0]->symbol->content.text);
-									erro=1;
-								}
-							}
-							break;
-						case AST_LIT_CHAR:
-							printf("WARNING - Line %d: character variable into the vector!!!\n", root->lineNumber);
-							break;
-						case AST_ADD:
-							if(root->son[0]->son[0]->son[0]->symbol->content.dataType != root->son[0]->son[0]->son[1]->symbol->content.dataType)
-							{
-								if((root->son[0]->son[0]->son[0]->symbol->content.dataType > 1 ) && (root->son[0]->son[0]->son[0]->symbol->content.dataType != 3))
-								{
-									printf("ERRO - Line %d: Vector %s is being used with wrong parameters inside it. [ NOT VALID 2] !!! ROOT DATA = %d\n", root->lineNumber, root->son[0]->symbol->content.text, root->son[0]->son[0]->son[0]->symbol->content.dataType);
-									erro=1;
-								}
-								else
-								{
-									if((root->son[0]->son[0]->son[1]->symbol->content.dataType > 1) && (root->son[0]->son[0]->son[1]->symbol->content.dataType != 3))
-									{
-										printf("ERRO - Line %d: Vector %s is being used with wrong parameters inside it. [ NOT VALID 3] !!!\n", root->lineNumber, root->son[0]->symbol->content.text);
-										erro=1;
-									}
-									else
-									{
-										if(root->son[0]->son[0]->son[0]->symbol->content.dataType == 1)
-										{
-											if(root->son[0]->son[0]->son[1]->symbol->content.dataType != 1)
-												printf("WARNING - Line %d: character variable in the operation into the vector!!!\n", root->lineNumber);
-										}
-										else
-											printf("WARNING - Line %d: character variable in the operation into the vector!!!\n", root->lineNumber);
-										}
-									}
-								}
-								else
-								{
-									if((root->son[0]->son[0]->son[0]->symbol->content.dataType != 1) && (root->son[0]->son[0]->son[0]->symbol->content.dataType != 3))
-									{
-										printf("ERRO - Line %d: Vector %s is being used with wrong parameters inside it. [ NOT VALID 4] !!!\n", root->lineNumber, root->son[0]->symbol->content.text);
-										erro=1;
-									}
-									else
-										if(root->son[0]->son[0]->son[0]->symbol->content.dataType == 3)
-											printf("WARNING - Line %d: character variable in the operation into the vector!!!\n", root->lineNumber, root->son[0]->symbol->content.text);
-								}
-								break;
-							default:
-								printf("ERRO - Line %d: Vector %s is being used with wrong parameters inside it. [ NOT VALID 5] !!!\n", root->lineNumber, root->son[0]->symbol->content.text);
-								erro=1;
-								break;
-					}
-					operIgual = analisaExpressao(root->son[0]->son[0], rootAux);
-					if(operIgual != 0)
-					{
-						if(operIgual != DATATYPE_KW_WORD)
-						{
-							if(operIgual == DATATYPE_KW_WORD)
-								printf("WARNING - Line %d: Loss of precision - float in vector!!!\n", root->lineNumber);
-							else
-							{
-								printf("ERRO - Line %d: Vector containing wrong parameters!!!\n", root->lineNumber);
-								erro=4;
-							}
-						}
-						operIgual = analisaExpressao(root->son[1], rootAux);
-						if(root->son[0]->symbol->content.dataType != operIgual)
-						{
-							if(root->son[1]->type == AST_EXPR_W_TKIDENTIFIER)
-								if(root->son[1]->symbol->content.type != SYMBOL_FUNCTION)
-								{
-									printf("ERRO - Line %d: Variable %s is not declared as a function, but it is being used as one!!!\n", root->lineNumber, root->son[1]->symbol->content.text);
-									erro=4;
-								}
-
-							switch(root->son[0]->symbol->content.dataType)
-							{
-								case DATATYPE_KW_BYTE:
-									if(operIgual == DATATYPE_KW_WORD)
-										printf("WARNING - Line %d: Loss of precision - different types, putting float into integer!!!\n", root->lineNumber);
-									else
-									{
-										printf("ERRO - Line %d: Variables containing different types!!!\n", root->lineNumber);
-										erro=4;
-									}
-									break;
-								case DATATYPE_KW_WORD:
-									if(operIgual == DATATYPE_KW_BOOL)
-									{
-										printf("ERRO - Line %d: Variables containing different types!!!\n", root->lineNumber);
-										erro=4;
-									}
-									break;
-								case DATATYPE_KW_BOOL:
-									printf("ERRO - Line %d: Variable does not match!!!\n", root->lineNumber);
-									erro=4;
-									break;
-							}
-						}
-						else
-							if(root->son[1]->type == AST_EXPR_W_TKIDENTIFIER)
-								if(root->son[1]->symbol->content.type != SYMBOL_FUNCTION)
-								{
-									printf("ERRO - Line %d: Variable %s is not declared as a function, but it is being used as one!!!\n", root->lineNumber, root->son[1]->symbol->content.text);
-									erro=4;
-								}
-					}
-				}
-			}
-			break;*/
 		default:
 			break;
 	}
@@ -525,62 +378,223 @@ void checkUtilization(ASTREE *root, ASTREE *rootAux)
 		checkUtilization(root->son[i], rootAux);
 }
 
-int checkOperationTypes(int expr1, int expr2)
+ASTREE* retrieveVarDeclaration(ASTREE *ast, ASTREE *nodeToRetrieve)
 {
-	if((expr1 != 0) && (expr2 != 0))
+	int i;
+	if(ast==0)
+		return;
+	if(ast->symbol!=0)
 	{
-		if(expr1 != expr2)
-		{
-			if((expr1 == DATATYPE_KW_BOOL) || (expr2 == DATATYPE_KW_BOOL))
-				return 1;
-			if((expr1 == DATATYPE_KW_WORD) || (expr2 == DATATYPE_KW_WORD))
+		if( (ast->type == AST_DECL_VECTOR) || 
+	   		(ast->type == AST_DECL_VECTOR_INITVALUE) || 
+	   		(ast->type == AST_DECL) || 
+	   		(ast->type == AST_DECL_POINTER) || 
+	   		(ast->type == AST_FUNCTION_DECL) ||
+	   		(ast->type ==AST_FUNCT_MORE_PARAMS) || 
+	   		(ast->type == AST_FUNCT_PARAMS))
+			if(strcmp(ast->symbol->content.text, nodeToRetrieve->symbol->content.text) == 0)
 			{
-				if((expr1 == DATATYPE_KW_BYTE) || (expr2 == DATATYPE_KW_BYTE))
-					return 2;
+				return ast;
 			}
-			else
-			{
-				if((expr1 == DATATYPE_KW_WORD) || (expr2 == DATATYPE_KW_WORD))
-					return 2;
-			}
-		}
-		else
-			return 3;
 	}
-	else
-		return 0;
+	for(i=0; i < MAX_SONS; i++)
+		retrieveVarDeclaration(ast->son[i], nodeToRetrieve);
 }
 
-int checkResultOperTypes(int verified, int expr1, int expr2, int lineNumber)
+int checkTwoRetTypes(int ret1, int ret2, int operation)
 {
-	int help = 0;
-
-	if(verified == 0)
-	{
-		printf("ERRO - Linha %d: Argumentos para o operando faltando!\n", lineNumber);
-		erro=4;
-		help = 0;
-	}
-	else
-	{
-		if(verified == 1)
-		{
-			printf("ERRO - Linha %d: variavel booleana na expressao!\n", lineNumber);
-			erro=4;
-		}
+	if(ret1 == ret2)
+		return ret1;
+	if(ret1 == RET_BYTEWORD)
+		if(ret2 == RET_BYTE || ret2 == RET_WORD)
+			return ret2;
 		else
+			return RET_INVALID;
+	if(ret2 == RET_BYTEWORD)
+		if(ret1 == RET_BYTE || ret1 == RET_WORD)
+			return ret1;
+		else
+			return RET_INVALID;
+}
+
+int checkRetType(ASTREE *node, int ptr)
+{
+	if(node!=0)
+	{
+		if(node->symbol!=0)
 		{
-			if(verified == 2)
+			int retry = 0;
+			ASTREE *nodeAux = node;
+			if(retry < 2)
 			{
-				printf("AVISO - Linha %d: operacao de WORD com BYTE!\n", lineNumber);
+				if(nodeAux->symbol->content.dataType == DATATYPE_KW_WORD && ptr == 0)
+					return RET_WORD;
+				if(nodeAux->symbol->content.dataType == DATATYPE_KW_WORD && ptr == 1)
+					return RET_WORD_PTR;
+				if(nodeAux->symbol->content.dataType == DATATYPE_KW_BYTE && ptr == 0)
+					return RET_BYTE;
+				if(nodeAux->symbol->content.dataType == DATATYPE_KW_BYTE && ptr == 1)
+					return RET_BYTE_PTR;
+				if(nodeAux->symbol->content.dataType == DATATYPE_KW_BOOL && ptr == 0)
+					return RET_BOOL;
+				if(nodeAux->symbol->content.dataType == DATATYPE_KW_BOOL && ptr == 1)
+					return RET_BOOL_PTR;
+				nodeAux = retrieveVarDeclaration(initialRoot, node);
+				retry++;
 			}
 		}
-		if(expr1 >= expr2)
-			help = expr1;
-		else
-			help = expr2;
+		switch(node->type)
+		{
+			case AST_LIT_INTEGER:
+				return RET_BYTEWORD;
+				break;
+			case AST_LIT_TRUE:
+				return RET_BOOL;
+				break;
+			case AST_LIT_FALSE:
+				return RET_BOOL;
+				break;
+			case AST_LIT_CHAR:
+				return RET_BYTEWORD;
+				break;
+			case AST_LIT_STRING:
+				return RET_INVALID;
+				break;
+			default:
+				printf("\n\nCASO AINDA NAO DEFINIDO tipo nodo%d tipo dado %d tipo symbol %d\n", node->type, node->symbol->content.dataType, node->symbol->content.type);
+				printf("TEXTO %s\n\n", node->symbol->content.text);
+				return RET_INVALID;
+				break;
+		}
 	}
-	return help;
+	else
+		return RET_UNKNOWN;
+}
+
+int analyseExpression(ASTREE *node)
+{
+	int retType = RET_UNKNOWN;
+	int ret1 = RET_UNKNOWN, ret2 = RET_UNKNOWN;
+	if(node != 0)
+	{
+		switch(node->type)
+		{
+			case AST_SYMBOL:
+				if(node->symbol->content.type != SYMBOL_TYPE_VAR && node->symbol->content.type != SYMBOL_TYPE_PTR)
+					return RET_INVALID;
+				else
+					retType = checkRetType(node, 0);
+				break;
+			case AST_LIT_INTEGER:
+				retType = checkRetType(node, 0);
+				break;
+			case AST_LIT_TRUE:
+				retType = checkRetType(node, 0);
+				break;
+			case AST_LIT_FALSE:
+				retType = checkRetType(node, 0);
+				break;
+			case AST_LIT_CHAR:
+				retType = checkRetType(node, 0);
+				break;
+			case AST_ADD:
+				ret1 = analyseExpression(node->son[0]);
+				ret2 = analyseExpression(node->son[1]);
+				retType = checkTwoRetTypes(ret1, ret2, AST_ADD);
+				break;
+			case AST_SUB:
+				ret1 = analyseExpression(node->son[0]);
+				ret2 = analyseExpression(node->son[1]);
+				retType = checkTwoRetTypes(ret1, ret2, AST_SUB);
+				break;
+			case AST_MUL:
+				ret1 = analyseExpression(node->son[0]);
+				ret2 = analyseExpression(node->son[1]);
+				retType = checkTwoRetTypes(ret1, ret2, AST_MUL);
+				break;
+			case AST_DIV:
+				ret1 = analyseExpression(node->son[0]);
+				ret2 = analyseExpression(node->son[1]);
+				retType = checkTwoRetTypes(ret1, ret2, AST_DIV);
+				break;
+			case AST_HIGHER:
+				ret1 = analyseExpression(node->son[0]);
+				ret2 = analyseExpression(node->son[1]);
+				retType = checkTwoRetTypes(ret1, ret2, AST_HIGHER);
+				break;
+			case AST_LOWER:
+				ret1 = analyseExpression(node->son[0]);
+				ret2 = analyseExpression(node->son[1]);
+				retType = checkTwoRetTypes(ret1, ret2, AST_LOWER);
+				break;
+			case AST_POINTER:
+				if(node->symbol->content.type != SYMBOL_TYPE_PTR)
+				{
+					printf("ERRO - Linha %d: A variavel %s nao e um ponteiro!\n", node->lineNumber, node->symbol->content.text);
+					return RET_INVALID;
+				}
+				else
+					retType = checkRetType(node, 0);
+				break;
+			case AST_POINTER_REF:
+				if(node->symbol->content.type != SYMBOL_TYPE_VAR)
+				{
+					printf("ERRO - Linha %d: A variavel %s nao e uma variavel do tipo BOOL, BYTE ou WORD para usar o operando &!\n", node->lineNumber, node->symbol->content.text);
+					return RET_INVALID;
+				}
+				else
+					retType = checkRetType(node, 1);
+				break;
+			case AST_EXPR_W_BRACKETS:
+				retType = analyseExpression(node->son[0]);
+				break;
+			case AST_NOT:
+				retType = analyseExpression(node->son[0]);
+				if(retType != RET_BOOL)
+					retType = RET_INVALID;
+			case AST_OPERATOR_AND:
+				ret1 = analyseExpression(node->son[0]);
+				ret2 = analyseExpression(node->son[1]);
+				retType = checkTwoRetTypes(ret1, ret2, AST_OPERATOR_AND);
+				break;
+			case AST_OPERATOR_OR:
+				ret1 = analyseExpression(node->son[0]);
+				ret2 = analyseExpression(node->son[1]);
+				retType = checkTwoRetTypes(ret1, ret2, AST_OPERATOR_OR);
+				break;
+			case AST_OPERATOR_LE:
+				ret1 = analyseExpression(node->son[0]);
+				ret2 = analyseExpression(node->son[1]);
+				retType = checkTwoRetTypes(ret1, ret2, AST_OPERATOR_LE);
+				break;
+			case AST_OPERATOR_GE:
+				ret1 = analyseExpression(node->son[0]);
+				ret2 = analyseExpression(node->son[1]);
+				retType = checkTwoRetTypes(ret1, ret2, AST_OPERATOR_LE);
+				break;
+			case AST_OPERATOR_NE:
+				ret1 = analyseExpression(node->son[0]);
+				ret2 = analyseExpression(node->son[1]);
+				retType = checkTwoRetTypes(ret1, ret2, AST_OPERATOR_NE);
+				break;
+			case AST_TK_IDENTIFIER_VET:
+				ret1 = analyseExpression(node->son[0]);
+				if(ret1 != RET_WORD && ret1 != RET_BYTE && ret1 != RET_BYTEWORD)
+				{
+					printf("ERRO - Linha %d: Indexacao errada do vetor %s. Necessita ser um BYTE ou WORD!\n", node->lineNumber, node->symbol->content.text);
+					return RET_INVALID;
+				}
+				retType = checkRetType(node, 0);
+				break;
+			case AST_EXPR_W_TKIDENTIFIER:
+				retType = checkRetType(node, 0);
+				break;
+			default:
+				printf("\n\nNODO AINDA NAO DEFINIDO\n\n");
+				break;
+		}
+	}
+	return retType;
 }
 
 void checkVarDeclAsFunc(ASTREE *ast, char *text)
@@ -613,179 +627,19 @@ void checkVarDeclAsVector(ASTREE *ast, char *text)
 		{
 			funcAstVect = ast;
 			scalDeclVect = 1;
-			printf("retornandoVECTORE");
 			return;
 		}
 	for(i=0; i < MAX_SONS; i++)
 		checkVarDeclAsVector(ast->son[i], text);
 }
 
-int analisaExpressao(ASTREE *ast, ASTREE *rootAux)
-{
-	int help, verified, expr1, expr2;
-	
-	if(ast != 0)
-	{
-		switch(ast->type)
-		{
-			case AST_SYMBOL:
-				funcAst = 0; funcAstVect = 0;
-				scalDecl = 0; scalDeclVect = 0;
-				checkVarDeclAsFunc(rootAux, ast->symbol->content.text);
-				checkVarDeclAsVector(rootAux, ast->symbol->content.text);
-				if(scalDecl == 1)
-				{
-					if(funcAst->symbol->content.type == SYMBOL_TYPE_FUNC)
-					{
-						printf("ERRO - Linha %d: Variavel %s usa o mesmo nome de uma funcao!\n", ast->lineNumber, ast->symbol->content.text);
-						erro=4;
-					}
-				}
-				if(scalDeclVect == 1)
-				{
-					printf("ERRO - Linha %d: Variavel %s usa o mesmo nome de um vetor!\n", ast->lineNumber, ast->symbol->content.text);
-					erro=4;
-				}
-				help = ast->symbol->content.dataType;
-				break;
-			case AST_LIT_INTEGER:
-				help = DATATYPE_KW_WORD;
-				break;
-			case AST_LIT_TRUE:
-				help = DATATYPE_KW_BOOL;
-				break;
-			case AST_LIT_FALSE:
-				help = DATATYPE_KW_BOOL;
-				break;
-			case AST_LIT_CHAR:
-				help = DATATYPE_KW_WORD;
-				break;
-			case AST_EXPR_W_TKIDENTIFIER:
-				if(ast->symbol->content.dataType == 0)
-					help = 0;
-				else
-					help = ast->symbol->content.dataType;
-				break;
-			case AST_EXPR_W_BRACKETS:
-				help = analisaExpressao(ast->son[0], rootAux);
-				break;
-			case AST_ADD:
-				expr1 = analisaExpressao(ast->son[0], rootAux);
-				expr2 = analisaExpressao(ast->son[1], rootAux);
-				verified = checkOperationTypes(expr1, expr2);
-				help = checkResultOperTypes(verified, expr1, expr2, ast->lineNumber);
-				break;
-			case AST_SUB:
-				expr1 = analisaExpressao(ast->son[0], rootAux);
-				expr2 = analisaExpressao(ast->son[1], rootAux);
-				verified = checkOperationTypes(expr1, expr2);
-				help = checkResultOperTypes(verified, expr1, expr2, ast->lineNumber);
-				break;
-			case AST_MUL:
-				expr1 = analisaExpressao(ast->son[0], rootAux);
-				expr2 = analisaExpressao(ast->son[1], rootAux);
-				verified = checkOperationTypes(expr1, expr2);
-				help = checkResultOperTypes(verified, expr1, expr2, ast->lineNumber);
-				break;
-			case AST_DIV:
-				expr1 = analisaExpressao(ast->son[0], rootAux);
-				expr2 = analisaExpressao(ast->son[1], rootAux);
-				verified = checkOperationTypes(expr1, expr2);
-				help = checkResultOperTypes(verified, expr1, expr2, ast->lineNumber);
-				break;
-			case AST_NOT:
-				expr1 = analisaExpressao(ast->son[0], rootAux);
-				if(expr1 != 0)
-					help = expr1;
-				else
-					help = 0;
-				break;
-			case AST_OPERATOR_AND:
-				expr1 = analisaExpressao(ast->son[0], rootAux);
-				expr2 = analisaExpressao(ast->son[1], rootAux);
-				verified = checkOperationTypes(expr1, expr2);
-				help = checkResultOperTypes(verified, expr1, expr2, ast->lineNumber);
-				break;
-			case AST_OPERATOR_OR:
-				expr1 = analisaExpressao(ast->son[0], rootAux);
-				expr2 = analisaExpressao(ast->son[1], rootAux);
-				verified = checkOperationTypes(expr1, expr2);
-				help = checkResultOperTypes(verified, expr1, expr2, ast->lineNumber);
-				break;
-			case AST_OPERATOR_LE:
-				expr1 = analisaExpressao(ast->son[0], rootAux);
-				expr2 = analisaExpressao(ast->son[1], rootAux);
-				verified = checkOperationTypes(expr1, expr2);
-				help = checkResultOperTypes(verified, expr1, expr2, ast->lineNumber);
-				break;
-			case AST_OPERATOR_GE:
-				expr1 = analisaExpressao(ast->son[0], rootAux);
-				expr2 = analisaExpressao(ast->son[1], rootAux);
-				verified = checkOperationTypes(expr1, expr2);
-				help = checkResultOperTypes(verified, expr1, expr2, ast->lineNumber);
-				break;
-			case AST_OPERATOR_EQ:
-				expr1 = analisaExpressao(ast->son[0], rootAux);
-				expr2 = analisaExpressao(ast->son[1], rootAux);
-				verified = checkOperationTypes(expr1, expr2);
-				help = checkResultOperTypes(verified, expr1, expr2, ast->lineNumber);
-				break;
-			case AST_OPERATOR_NE:
-				expr1 = analisaExpressao(ast->son[0], rootAux);
-				expr2 = analisaExpressao(ast->son[1], rootAux);
-				verified = checkOperationTypes(expr1, expr2);
-				help = checkResultOperTypes(verified, expr1, expr2, ast->lineNumber);
-				break;
-			case AST_HIGHER:
-				expr1 = analisaExpressao(ast->son[0], rootAux);
-				expr2 = analisaExpressao(ast->son[1], rootAux);
-				verified = checkOperationTypes(expr1, expr2);
-				help = checkResultOperTypes(verified, expr1, expr2, ast->lineNumber);
-				break;
-			case AST_LOWER:
-				expr1 = analisaExpressao(ast->son[0], rootAux);
-				expr2 = analisaExpressao(ast->son[1], rootAux);
-				verified = checkOperationTypes(expr1, expr2);
-				help = checkResultOperTypes(verified, expr1, expr2, ast->lineNumber);
-				break;
-			case AST_TK_IDENTIFIER_VET:
-				funcAst = 0;
-				scalDecl = 0;
-				checkVarDeclAsFunc(rootAux, ast->symbol->content.text);
-				if(scalDecl == 1)
-				{
-					if(funcAst->symbol->content.type == SYMBOL_TYPE_FUNC)
-					{
-						printf("ERRO - Linha %d: Variavel %s tem o mesmo nome de uma funcao!\n", ast->lineNumber, ast->symbol->content.text);
-						erro=4;
-					}
-				}
-				if(ast->symbol->content.dataType != 0)
-				{
-					help = ast->symbol->content.dataType;
-				}
-				else
-					help = 0;
-				break;
-			default:
-				help = 0;
-				break;			
-		}
-	}
-	return help;
-}
-
 int checkParamsFuncAux(ASTREE *ast, ASTREE *node)
 {
 	if(node!=0)
 	{
-		printf("\nnode->type %d\n", node->type);
-		printf("\nast->type %d\n", ast->type);
 		switch(node->type)
 		{
 			case AST_SYMBOL:
-			printf("\nNODEDATA = %d\n", node->symbol->content.dataType);
-			printf("\nASTDATA = %d\n", ast->symbol->content.dataType);
 				if((node->symbol->content.dataType == ast->symbol->content.dataType) && node->symbol->content.type == SYMBOL_TYPE_VAR)
 					return CHECKPARAMFUNC_OK;
 				else
@@ -848,14 +702,6 @@ int checkParamsFunc(ASTREE *ast, ASTREE *son)
 	int iterationNumber = 0;
 	do
 	{
-		if(ast!=0)
-			printf("\nast %d\n", ast->type);
-		else
-			printf("\nast NULL\n");
-		if(nodeSon!=0)
-			printf("\nnodeSon %d\n", nodeSon->type);
-		else
-			printf("\nnodeson NULL\n");
 		if(ast==0)
 		{
 			if(nodeSon==0)
@@ -873,18 +719,15 @@ int checkParamsFunc(ASTREE *ast, ASTREE *son)
 			{
 				if(nodeSon->son[0]!=0)
 				{
-					printf("\nsim eh diferente tipo %d\n", nodeSon->son[0]->type);
 					if(nodeSon->son[0]->type == AST_USING_PRIMARY_PARAMETER)
 					{
 						ret = checkParamsFuncAux(ast, nodeSon->son[0]->son[0]);
-						printf("\nvai retornar1 %d\n", ret);
 						if(ret != CHECKPARAMFUNC_OK)
 							return ret;
 					}
 					else
 					{
 						ret = checkParamsFuncAux(ast, nodeSon->son[0]);
-						printf("\nvai retornar2 %d\n", ret);
 						if(ret != CHECKPARAMFUNC_OK)
 							return ret;
 					}
@@ -892,20 +735,10 @@ int checkParamsFunc(ASTREE *ast, ASTREE *son)
 				else
 				{
 					ret = checkParamsFuncAux(ast, nodeSon);
-					printf("\nvai retornar2 %d\n", ret);
 					if(ret != CHECKPARAMFUNC_OK)
 						return ret;
 				}
 				nodeSon = nodeSon->son[1];
-					printf("\nchego aqui\n");
-					/*ret = checkParamsFuncAux(ast, nodeSon);
-					printf("ret %d quanto sera", ret);
-					if(ret != CHECKPARAMFUNC_OK)
-						return ret;*/
-					//nodeSon = nodeSon->son[1];
-					if(nodeSon)
-						printf("\nnodeSon %d\n", nodeSon->type);
-					printf("\nsaiu daqui\n");
 				ast = ast->son[1];
 			}
 		}

@@ -5,17 +5,15 @@
 
 #define SYMBOL_TK_IDENTIFIER  1
 #define SYMBOL_LIT_INTEGER    2
-#define SYMBOL_LIT_FLOATING   3
-#define SYMBOL_LIT_TRUE       4
-#define SYMBOL_LIT_FALSE      5
-#define SYMBOL_LIT_CHAR       6
-#define SYMBOL_LIT_STRING     7
+#define SYMBOL_LIT_TRUE       3
+#define SYMBOL_LIT_FALSE      4
+#define SYMBOL_LIT_CHAR       5
+#define SYMBOL_LIT_STRING     6
 
-#define SYMBOL_TYPE_VAR       8
-#define SYMBOL_TYPE_FUNC      9
-#define SYMBOL_TYPE_VEC       10
-#define SYMBOL_TYPE_PTR       11
-#define SYMBOL_TYPE_FPAR      12
+#define SYMBOL_TYPE_VAR       7
+#define SYMBOL_TYPE_FUNC      8
+#define SYMBOL_TYPE_VEC       9
+#define SYMBOL_TYPE_PTR       10
 
 #define DATATYPE_KW_WORD      1
 #define DATATYPE_KW_BYTE      2

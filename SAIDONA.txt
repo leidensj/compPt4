@@ -1,14 +1,14 @@
 word a:0;
 word v[10]:0 0 'a' 0 0 0 0 0 0 0;
 word mat[1000];
-word $pt:0;
+word $pt:false;
 bool b:0;
 word main()
 {
 output "Digite um numero: "
 loop
 {
-a = incn(a, b)
+a = incn(b, a)
 }
 (false)
 if(true) else
