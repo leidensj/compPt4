@@ -70,7 +70,7 @@ typedef struct astreenode
 
 ASTREE* astCreate(int type, HASH_NODE* symbol, ASTREE* s0, ASTREE* s1, ASTREE* s2, ASTREE* s3);
 void astPrintSingle(ASTREE* node);
-void astPrintTree(ASTREE* root, int level);
+void astPrintTree(ASTREE* root);
 void astGetOutputFileName(char *fn);
 int dataTypeMap(int astType);
 #endif

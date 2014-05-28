@@ -5,13 +5,9 @@
 
 int erro;
 
-void initializeSemantic(ASTREE *node);
-
 void checkDeclarationFuncParam(ASTREE *node, ASTREE *functionNode);
 
 void checkDeclaration(ASTREE *root);
-
-ASTREE* retrieveVarDeclaration(ASTREE *initialRoot, ASTREE *nodeToRetrieve);
 
 void checkVarDeclAsFunc(ASTREE *ast, char *text);
 
@@ -25,7 +21,7 @@ int checkTwoRetTypes(int ret1, int ret2, int operation);
 
 int checkRetType(ASTREE *node, int ptr);
 
-int analyseExpression(ASTREE *node);
+int analyzeExpression(ASTREE *node);
 
 int checkParamsFuncAux(ASTREE *ast, ASTREE *node);
 

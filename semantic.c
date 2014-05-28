@@ -1,37 +1,32 @@
 #include "semantic.h"
 #include <stdio.h>
 
-#define CHECKPARAMFUNC_OK	  0
-#define CHECKPARAMFUNC_ERROR1 1
-#define CHECKPARAMFUNC_ERROR2 2
-#define CHECKPARAMFUNC_ERROR3 3
-#define CHECKPARAMFUNC_ERROR4 4
-#define CHECKPARAMFUNC_ERROR5 5
-#define CHECKPARAMFUNC_ERROR6 6
+#define CHECKPARAMFUNC_OK	  100
+#define CHECKPARAMFUNC_ERROR1 101
+#define CHECKPARAMFUNC_ERROR2 102
+#define CHECKPARAMFUNC_ERROR3 103
+#define CHECKPARAMFUNC_ERROR4 104
+#define CHECKPARAMFUNC_ERROR5 105
+#define CHECKPARAMFUNC_ERROR6 106
 
-#define RET_UNKNOWN 		  0
-#define RET_WORD 			  1
-#define RET_WORD_PTR          2
-#define RET_BYTE              3
-#define RET_BYTE_PTR          4
-#define RET_BOOL              5
-#define RET_BOOL_PTR          6
-#define RET_BYTEWORD		  7
-#define RET_INVALID			  8
+#define RET_UNKNOWN 		  200
+#define RET_WORD 			  201
+#define RET_WORD_PTR          202
+#define RET_BYTE              203
+#define RET_BYTE_PTR          204
+#define RET_BOOL              205
+#define RET_BOOL_PTR          206
+#define RET_BYTEWORD		  207
+#define RET_INVALID			  208
 
 
 int guardaTypeRet=0, guardaPtrRet=0;
-ASTREE *funcAst, *funcAstVect, *initialRoot;
+ASTREE *funcAst, *funcAstVect;
 int scalDecl=0, scalDeclVect=0;
 
 int getErrorNumber()
 {
 	return erro;
-}
-
-void initializeSemantic(ASTREE *node)
-{
-	initialRoot = node;
 }
 
 void checkDeclarationFuncParam(ASTREE *node, ASTREE *functionNode)
@@ -135,7 +130,7 @@ void checkUtilization(ASTREE *root, ASTREE *rootAux)
 	if (root == 0)
 		return;
 	if(root->type == AST_FUNCTION_DECL)
-		guardaTypeRet = dataTypeMap(root->son[0]->type);
+		guardaTypeRet = checkRetType(root, 0);
 		
 	switch(root->type)
 	{
@@ -143,7 +138,7 @@ void checkUtilization(ASTREE *root, ASTREE *rootAux)
 			if(root->symbol != 0)
 				if (root->symbol->content.type != SYMBOL_TYPE_VAR)
 				{
-	       			printf("ERRO - Linha %d: Declaracao da variavel em INPUT faltante!\n", root->lineNumber);
+	       			printf("ERRO - Linha %d: Variavel em INPUT faltante!\n", root->lineNumber);
 					erro=4;
 				}
 			break;
@@ -208,66 +203,24 @@ void checkUtilization(ASTREE *root, ASTREE *rootAux)
 			}
 			else
 			{
-				//verRet = analisaExpressao(root->son[0], rootAux);
-				verRet = 0;
+				verRet = analyzeExpression(root->son[0]);
 				if(guardaTypeRet != verRet)
 				{
-					switch(guardaTypeRet)
+					if(verRet == RET_INVALID)
 					{
-						case DATATYPE_KW_WORD:
-							if(verRet == DATATYPE_KW_BYTE)
-								printf("AVISO - Linha %d: Retornando BYTE ao inves de WORD!\n", root->lineNumber);		
-							else
+						printf("ERRO - Linha %d: Expressao invalida de retorno!\n", root->lineNumber);
+						erro=4;
+					}
+					else
+					{
+						if(guardaTypeRet == RET_BYTE && verRet == RET_WORD)
+							printf("AVISO - Linha %d: Retornando WORD ao inves de byte, perda de representatividade possivel!\n", root->lineNumber);
+						else
+							if(!((guardaTypeRet == RET_BYTE || guardaTypeRet == RET_WORD) && verRet == RET_BYTEWORD))
 							{
-								if(verRet == DATATYPE_KW_BOOL)
-								{
-									printf("ERRO - Linha %d: Retornando BOOL ao inves de WORD!\n", root->lineNumber);
-									erro=4;
-								}
-								else
-								{
-									printf("ERRO - Linha %d: Retornando variavel nao declarada!\n", root->lineNumber);
-									erro=4;
-								}
+								printf("ERRO - Linha %d: Imcompatibilidade entre retorno da funcao e retorno da expressao!\n", root->lineNumber);
+								erro=4;
 							}
-							break;
-						case DATATYPE_KW_BYTE:
-							if(verRet == DATATYPE_KW_WORD)
-								printf("AVISO - Linha %d: Retornando WORD ao inves de BYTE! (possivel perda de representacao)!\n", root->lineNumber);		
-							else 
-							{
-								if (verRet == DATATYPE_KW_BOOL)
-								{
-									printf("ERRO - Linha %d: Retornando BOOL ao inves de BYTE!\n", root->lineNumber);
-									erro=4;
-								}
-								else
-								{
-									printf("ERRO - Linha %d: Retornando variavel nao declarada!\n", root->lineNumber);
-									erro=4;
-								}
-							}
-							break;
-						case DATATYPE_KW_BOOL:
-							if(verRet == DATATYPE_KW_WORD)
-							{
-								printf("ERRO - Linha %d: Retornando WORD ao inves de BOOL!\n", root->lineNumber);
-								erro=4;	
-							}
-							else
-							{ 
-								if (verRet == DATATYPE_KW_BYTE)
-								{
-									printf("ERRO - Linha %d: Retornando BYTE ao inves de BOOL!\n", root->lineNumber);
-									erro=4;
-								}
-								else
-								{
-									printf("ERRO - Linha %d: Retornando variavel nao declarada!\n", root->lineNumber);
-									erro=4;
-								}
-							}
-							break;
 					}
 				}
 			}
@@ -366,7 +319,10 @@ void checkUtilization(ASTREE *root, ASTREE *rootAux)
 			}
 			break;
 		case AST_EQUALS:
-			if(analyseExpression(root->son[0]) == RET_INVALID)
+			if(root->son[0]->symbol != 0)
+				if(strcmp(root->son[0]->symbol->content.text, "v") == 0)
+					printf("\nV AQUI PORRAN na linha %d!!!\n", root->lineNumber);
+			if(analyzeExpression(root->son[0]) == RET_INVALID)
 			{
 				printf("ERRO - Linha %d: Expressao com termos invalidos ou incompativeis!\n", root->lineNumber);
 				erro=4;
@@ -378,7 +334,7 @@ void checkUtilization(ASTREE *root, ASTREE *rootAux)
 		checkUtilization(root->son[i], rootAux);
 }
 
-ASTREE* retrieveVarDeclaration(ASTREE *ast, ASTREE *nodeToRetrieve)
+/*ASTREE* retrieveVarDeclaration(ASTREE *ast, ASTREE *nodeToRetrieve)
 {
 	int i;
 	if(ast==0)
@@ -394,12 +350,13 @@ ASTREE* retrieveVarDeclaration(ASTREE *ast, ASTREE *nodeToRetrieve)
 	   		(ast->type == AST_FUNCT_PARAMS))
 			if(strcmp(ast->symbol->content.text, nodeToRetrieve->symbol->content.text) == 0)
 			{
+				printf("\n\nACHOU!!!!!!!\nnodotipo %d\nnodosymtipo %d\nnododatatype %d\n\n", ast->type, ast->symbol->content.type, ast->symbol->content.dataType);
 				return ast;
 			}
 	}
 	for(i=0; i < MAX_SONS; i++)
 		retrieveVarDeclaration(ast->son[i], nodeToRetrieve);
-}
+}*/
 
 int checkTwoRetTypes(int ret1, int ret2, int operation)
 {
@@ -423,25 +380,18 @@ int checkRetType(ASTREE *node, int ptr)
 	{
 		if(node->symbol!=0)
 		{
-			int retry = 0;
-			ASTREE *nodeAux = node;
-			if(retry < 2)
-			{
-				if(nodeAux->symbol->content.dataType == DATATYPE_KW_WORD && ptr == 0)
-					return RET_WORD;
-				if(nodeAux->symbol->content.dataType == DATATYPE_KW_WORD && ptr == 1)
-					return RET_WORD_PTR;
-				if(nodeAux->symbol->content.dataType == DATATYPE_KW_BYTE && ptr == 0)
-					return RET_BYTE;
-				if(nodeAux->symbol->content.dataType == DATATYPE_KW_BYTE && ptr == 1)
-					return RET_BYTE_PTR;
-				if(nodeAux->symbol->content.dataType == DATATYPE_KW_BOOL && ptr == 0)
-					return RET_BOOL;
-				if(nodeAux->symbol->content.dataType == DATATYPE_KW_BOOL && ptr == 1)
-					return RET_BOOL_PTR;
-				nodeAux = retrieveVarDeclaration(initialRoot, node);
-				retry++;
-			}
+			if(node->symbol->content.dataType == DATATYPE_KW_WORD && ptr == 0)
+				return RET_WORD;
+			if(node->symbol->content.dataType == DATATYPE_KW_WORD && ptr == 1)
+				return RET_WORD_PTR;
+			if(node->symbol->content.dataType == DATATYPE_KW_BYTE && ptr == 0)
+				return RET_BYTE;
+			if(node->symbol->content.dataType == DATATYPE_KW_BYTE && ptr == 1)
+				return RET_BYTE_PTR;
+			if(node->symbol->content.dataType == DATATYPE_KW_BOOL && ptr == 0)
+				return RET_BOOL;
+			if(node->symbol->content.dataType == DATATYPE_KW_BOOL && ptr == 1)
+				return RET_BOOL_PTR;
 		}
 		switch(node->type)
 		{
@@ -471,7 +421,7 @@ int checkRetType(ASTREE *node, int ptr)
 		return RET_UNKNOWN;
 }
 
-int analyseExpression(ASTREE *node)
+int analyzeExpression(ASTREE *node)
 {
 	int retType = RET_UNKNOWN;
 	int ret1 = RET_UNKNOWN, ret2 = RET_UNKNOWN;
@@ -480,6 +430,8 @@ int analyseExpression(ASTREE *node)
 		switch(node->type)
 		{
 			case AST_SYMBOL:
+				if(strcmp(node->symbol->content.text,"v") == 0)
+					printf("\nacheiaqui o v, tipo %d\n", node->symbol->content.type);
 				if(node->symbol->content.type != SYMBOL_TYPE_VAR && node->symbol->content.type != SYMBOL_TYPE_PTR)
 					return RET_INVALID;
 				else
@@ -498,33 +450,33 @@ int analyseExpression(ASTREE *node)
 				retType = checkRetType(node, 0);
 				break;
 			case AST_ADD:
-				ret1 = analyseExpression(node->son[0]);
-				ret2 = analyseExpression(node->son[1]);
+				ret1 = analyzeExpression(node->son[0]);
+				ret2 = analyzeExpression(node->son[1]);
 				retType = checkTwoRetTypes(ret1, ret2, AST_ADD);
 				break;
 			case AST_SUB:
-				ret1 = analyseExpression(node->son[0]);
-				ret2 = analyseExpression(node->son[1]);
+				ret1 = analyzeExpression(node->son[0]);
+				ret2 = analyzeExpression(node->son[1]);
 				retType = checkTwoRetTypes(ret1, ret2, AST_SUB);
 				break;
 			case AST_MUL:
-				ret1 = analyseExpression(node->son[0]);
-				ret2 = analyseExpression(node->son[1]);
+				ret1 = analyzeExpression(node->son[0]);
+				ret2 = analyzeExpression(node->son[1]);
 				retType = checkTwoRetTypes(ret1, ret2, AST_MUL);
 				break;
 			case AST_DIV:
-				ret1 = analyseExpression(node->son[0]);
-				ret2 = analyseExpression(node->son[1]);
+				ret1 = analyzeExpression(node->son[0]);
+				ret2 = analyzeExpression(node->son[1]);
 				retType = checkTwoRetTypes(ret1, ret2, AST_DIV);
 				break;
 			case AST_HIGHER:
-				ret1 = analyseExpression(node->son[0]);
-				ret2 = analyseExpression(node->son[1]);
+				ret1 = analyzeExpression(node->son[0]);
+				ret2 = analyzeExpression(node->son[1]);
 				retType = checkTwoRetTypes(ret1, ret2, AST_HIGHER);
 				break;
 			case AST_LOWER:
-				ret1 = analyseExpression(node->son[0]);
-				ret2 = analyseExpression(node->son[1]);
+				ret1 = analyzeExpression(node->son[0]);
+				ret2 = analyzeExpression(node->son[1]);
 				retType = checkTwoRetTypes(ret1, ret2, AST_LOWER);
 				break;
 			case AST_POINTER:
@@ -546,39 +498,44 @@ int analyseExpression(ASTREE *node)
 					retType = checkRetType(node, 1);
 				break;
 			case AST_EXPR_W_BRACKETS:
-				retType = analyseExpression(node->son[0]);
+				retType = analyzeExpression(node->son[0]);
 				break;
 			case AST_NOT:
-				retType = analyseExpression(node->son[0]);
+				retType = analyzeExpression(node->son[0]);
 				if(retType != RET_BOOL)
 					retType = RET_INVALID;
 			case AST_OPERATOR_AND:
-				ret1 = analyseExpression(node->son[0]);
-				ret2 = analyseExpression(node->son[1]);
+				ret1 = analyzeExpression(node->son[0]);
+				ret2 = analyzeExpression(node->son[1]);
 				retType = checkTwoRetTypes(ret1, ret2, AST_OPERATOR_AND);
 				break;
 			case AST_OPERATOR_OR:
-				ret1 = analyseExpression(node->son[0]);
-				ret2 = analyseExpression(node->son[1]);
+				ret1 = analyzeExpression(node->son[0]);
+				ret2 = analyzeExpression(node->son[1]);
 				retType = checkTwoRetTypes(ret1, ret2, AST_OPERATOR_OR);
 				break;
 			case AST_OPERATOR_LE:
-				ret1 = analyseExpression(node->son[0]);
-				ret2 = analyseExpression(node->son[1]);
+				ret1 = analyzeExpression(node->son[0]);
+				ret2 = analyzeExpression(node->son[1]);
 				retType = checkTwoRetTypes(ret1, ret2, AST_OPERATOR_LE);
 				break;
 			case AST_OPERATOR_GE:
-				ret1 = analyseExpression(node->son[0]);
-				ret2 = analyseExpression(node->son[1]);
+				ret1 = analyzeExpression(node->son[0]);
+				ret2 = analyzeExpression(node->son[1]);
 				retType = checkTwoRetTypes(ret1, ret2, AST_OPERATOR_LE);
 				break;
 			case AST_OPERATOR_NE:
-				ret1 = analyseExpression(node->son[0]);
-				ret2 = analyseExpression(node->son[1]);
+				ret1 = analyzeExpression(node->son[0]);
+				ret2 = analyzeExpression(node->son[1]);
 				retType = checkTwoRetTypes(ret1, ret2, AST_OPERATOR_NE);
 				break;
 			case AST_TK_IDENTIFIER_VET:
-				ret1 = analyseExpression(node->son[0]);
+				if(node->symbol->content.type != SYMBOL_TYPE_VEC)
+				{
+					printf("ERRO - Linha %d: Variavel %s nao e um vetor!\n", node->lineNumber, node->symbol->content.text);
+					return RET_INVALID;
+				}
+				ret1 = analyzeExpression(node->son[0]);
 				if(ret1 != RET_WORD && ret1 != RET_BYTE && ret1 != RET_BYTEWORD)
 				{
 					printf("ERRO - Linha %d: Indexacao errada do vetor %s. Necessita ser um BYTE ou WORD!\n", node->lineNumber, node->symbol->content.text);
@@ -587,6 +544,11 @@ int analyseExpression(ASTREE *node)
 				retType = checkRetType(node, 0);
 				break;
 			case AST_EXPR_W_TKIDENTIFIER:
+				if(node->symbol->content.type != SYMBOL_TYPE_FUNC)
+				{
+					printf("ERRO - Linha %d: Variavel %s nao e um vetor!\n", node->lineNumber, node->symbol->content.text);
+					return RET_INVALID;
+				}
 				retType = checkRetType(node, 0);
 				break;
 			default:

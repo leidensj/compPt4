@@ -7,7 +7,7 @@
 
 void createTokenContent(TOKEN_CONTENT *content, int type, char *text) 
 {
-	int len = strlen(text);
+    int len = strlen(text);
     content->text = (char*) malloc(len + 1);
     strcpy(content->text, text);
 
@@ -38,70 +38,74 @@ void createTokenContent(TOKEN_CONTENT *content, int type, char *text)
 
 void hashInit(void)
 {
-	int i;
-	for (i = 0; i < HASH_SIZE; i++)
-		Table[i] = 0;
+    int i;
+    for (i = 0; i < HASH_SIZE; i++)
+        Table[i] = 0;
 }
 
 int hashAddress(char *text)
 {
-	int addr = 1;
-	int i;
+    int addr = 1;
+    int i;
 
-	for (i=0; i<strlen(text); i++)
-		addr = (addr*text[i]) % HASH_SIZE + 1;
-	return addr - 1;
+    for (i=0; i<strlen(text); i++)
+        addr = (addr*text[i]) % HASH_SIZE + 1;
+    return addr - 1;
 }
 	
 HASH_NODE *hashInsert(char *text, int type)
 {
     HASH_NODE *found = hashFind(text, type);
-	if(!found)
-	{
-		HASH_NODE *newnode;
-		newnode = (HASH_NODE*) calloc(1, sizeof(HASH_NODE));
-		int address = hashAddress(text);
-		newnode->next = Table[address];
-		createTokenContent(&(newnode->content), type, text);
-		Table[address] = newnode;
-		return newnode;
-	}
-	else
-		return found;
+    if(!found)
+    {
+        HASH_NODE *newnode;
+        newnode = (HASH_NODE*) calloc(1, sizeof(HASH_NODE));
+        int address = hashAddress(text);
+        newnode->next = Table[address];
+        createTokenContent(&(newnode->content), type, text);
+        Table[address] = newnode;
+        return newnode;
+    }
+    else
+        return found;
 }
 	
 HASH_NODE* hashFind(char *text, int type)
 {
-	//verifica se o CONTEUDO e o TIPO sao iguais
-	HASH_NODE *pt;
-	int addr = hashAddress(text);
+    HASH_NODE *pt;
+    int addr = hashAddress(text);
 	
-	for(pt = Table[addr]; pt; pt = pt->next)
-		if(!strcmp(pt->content.text, text) && pt->content.type == type)
-			return pt;
-		
-	return NULL;
+    for(pt = Table[addr]; pt; pt = pt->next)
+        if(!strcmp(pt->content.text, text) && pt->content.type == type)
+            return pt;
+
+    return NULL;
 }
 	
 void hashPrint()
 {
-	int i;
-	HASH_NODE *pt;
-	printf("╔═══════════════════════════════════════════════════════════════════════\n");
-	for(i = 0; i< HASH_SIZE; i++)
-		for(pt = Table[i]; pt; pt = pt->next)
-			switch(pt->content.type)
-			{
-				case TK_IDENTIFIER:				printf("║T:%d\tL:%d\t=> IDENTIFICADOR = %s \n", i, pt->content.lineNumber, pt->content.text); break;
-				case LIT_INTEGER:				printf("║T:%d\tL:%d\t=> INTEIRO       = %s \n", i, pt->content.lineNumber, pt->content.text); break;
-				case LIT_FALSE:					printf("║T:%d\tL:%d\t=> FALSE         = %s \n", i, pt->content.lineNumber, pt->content.text); break;
-				case LIT_TRUE:					printf("║T:%d\tL:%d\t=> TRUE          = %s \n", i, pt->content.lineNumber, pt->content.text); break;
-				case LIT_CHAR:					printf("║T:%d\tL:%d\t=> CHAR          = %s \n", i, pt->content.lineNumber, pt->content.text); break;
-				case LIT_STRING:				printf("║T:%d\tL:%d\t=> STRING        = %s \n", i, pt->content.lineNumber, pt->content.text); break;
-				case TOKEN_ERROR:				printf("║T:%d\tL:%d\t=> ERROR         = %s \n", i, pt->content.lineNumber, pt->content.text); break;
-				default:						printf("║ DEFAULT  %s \n", pt->content.text); break;
-			}
-	printf("╚═══════════════════════════════════════════════════════════════════════\n");
+    int i;
+    HASH_NODE *pt;
+    printf("╔═══════════════════════════════════════════════════════════════════════\n");
+    printf("║TABELA HASH\n");
+    for(i = 0; i< HASH_SIZE; i++)
+        for(pt = Table[i]; pt; pt = pt->next)
+            switch(pt->content.type)
+            {
+                case SYMBOL_TK_IDENTIFIER:  printf("║T:%d\tL:%d\t=> NAO DECLARADO = %s \n", i, pt->content.lineNumber, pt->content.text); break;
+                case SYMBOL_TYPE_VAR:       printf("║T:%d\tL:%d\t=> VARIAVEL      = %s \n", i, pt->content.lineNumber, pt->content.text); break;
+                case SYMBOL_TYPE_FUNC:      printf("║T:%d\tL:%d\t=> FUNCAO        = %s \n", i, pt->content.lineNumber, pt->content.text); break;
+                case SYMBOL_TYPE_VEC:       printf("║T:%d\tL:%d\t=> VETOR         = %s \n", i, pt->content.lineNumber, pt->content.text); break;
+                case SYMBOL_TYPE_PTR:       printf("║T:%d\tL:%d\t=> PONTEIRO      = %s \n", i, pt->content.lineNumber, pt->content.text); break;
+                case SYMBOL_LIT_INTEGER:    printf("║T:%d\tL:%d\t=> INTEIRO       = %s \n", i, pt->content.lineNumber, pt->content.text); break;
+                case SYMBOL_LIT_FALSE:      printf("║T:%d\tL:%d\t=> FALSE         = %s \n", i, pt->content.lineNumber, pt->content.text); break;
+                case SYMBOL_LIT_TRUE:       printf("║T:%d\tL:%d\t=> TRUE          = %s \n", i, pt->content.lineNumber, pt->content.text); break;
+                case SYMBOL_LIT_CHAR:       printf("║T:%d\tL:%d\t=> CHAR          = %s \n", i, pt->content.lineNumber, pt->content.text); break;
+                case SYMBOL_LIT_STRING:     printf("║T:%d\tL:%d\t=> STRING        = %s \n", i, pt->content.lineNumber, pt->content.text); break;
+                case TOKEN_ERROR:           printf("║T:%d\tL:%d\t=> ERROR         = %s \n", i, pt->content.lineNumber, pt->content.text); break;
+                default:                    printf("║ DEFAULT  %s \n", pt->content.text); break;
+            }
+    printf("╚═══════════════════════════════════════════════════════════════════════\n");
 }
 
 TOKEN_CONTENT *hashGet(int type, char *text) 

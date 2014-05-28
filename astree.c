@@ -298,17 +298,15 @@ void astPrintSingle(ASTREE* node)
      }
 }
 
-void astPrintTree(ASTREE* root, int level)
+void astPrintTree(ASTREE* root)
 {
      int i;
 
      if(root == 0)
           return;
 
-     astPrintSingle(root);
-
      for(i = 0; i<MAX_SONS; ++i)
-          astPrintTree(root->son[i], level +1);
+          astPrintTree(root->son[i]);
 }
 
 int dataTypeMap(int astType)

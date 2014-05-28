@@ -23,22 +23,21 @@ word main (bool b)
           a = $pt
           pt = pt + 1
           b = (i < 10)
-          
           //ERRORS
-          a = v               //ERROR
-          a = v[v]            //ERROR
-          a = a[1]            //ERROR
-          a = incn[1]         //ERROR
-          a = a(5)            //ERROR
-          a = v(5)            //ERROR
-          a = incn(5)         //ERROR
-          a = incn(5,6,7)     //ERROR
-          v = 2               //ERROR
-          a[5] = 2            //ERROR
-          incn[5] = 2         //ERROR
-          pt = pt/2           //ERROR
-          a = (i < 10)        //ERROR
-          a = pt + 1          //ERROR
+          a = v
+          //a = v[v]            //ERROR
+          //a = a[1]            //ERROR
+          //a = incn[1]         //ERROR
+          //a = a(5)            //ERROR
+          //a = v(5)            //ERROR
+          //a = incn(5)         //ERROR
+          //a = incn(5,6,7)     //ERROR
+          //v = 2               //ERROR
+          //a[5] = 2            //ERROR
+          //incn[5] = 2         //ERROR
+          //pt = pt/2           //ERROR
+          //a = (i < 10)        //ERROR
+          //a = pt + 1          //ERROR
      }(i<10)
      
      output "Resultado das contas estranhas: ", a, "\n"

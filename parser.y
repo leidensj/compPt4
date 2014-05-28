@@ -68,11 +68,10 @@ int number;
 %%
 
 program
-		: global_decl												{initializeSemantic($1);
-																	 checkDeclaration($1); 
+		: global_decl												{checkDeclaration($1); 
 																	 checkUndeclared(); 
 																	 checkUtilization($1, $1); 
-																	 astPrintTree($1,0);}
+																	 astPrintTree($1);}
 		;
 	
 
@@ -89,7 +88,8 @@ decl
 																	 $2->content.dataType = dataTypeMap($1->type);}
 		| spec_type TK_IDENTIFIER ':' init_value ';'				{$$ = astCreate(AST_DECL,$2,$1,$4,0,0);
 																	 $2->content.dataType = dataTypeMap($1->type);}
-		| spec_type '$' TK_IDENTIFIER ':' init_value ';'			{$$ = astCreate(AST_DECL_POINTER,$3,$1,$5,0,0);}
+		| spec_type '$' TK_IDENTIFIER ':' init_value ';'			{$$ = astCreate(AST_DECL_POINTER,$3,$1,$5,0,0);
+																	 $3->content.dataType = dataTypeMap($1->type);}
 		;
 
 vector_size
