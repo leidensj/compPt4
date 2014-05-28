@@ -26,6 +26,7 @@ b = (i < 10)
 a = v
 a = v[v]
 a = a[1]
+if(a) thena = false
 a = incn[1]
 a = a(5)
 a = v(5)
@@ -49,6 +50,6 @@ x = 1
 x = 2
 x = 3
 x = 4
-return x + n
+return b
 }
 ;

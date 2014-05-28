@@ -26,13 +26,14 @@ word main (bool b)
           b = (i < 10)
           a = v
           a = v[v]            
-          a = a[1]            
+          a = a[1]
+          if(a) then a = false            
           a = incn[1]         
           a = a(5)            
           a = v(5)            
           a = incn(5)         
-          a = incn(5,6,7)     
-          v = 2               
+          a = incn(5,6,7)  
+          v = 2             
           a[5] = 2            
           incn[5] = 2         
           pt = pt/2           
@@ -50,5 +51,5 @@ word incn (word x, word n)
      x = 2
      x = 3
      x = 4
-     return x+n
+     return b
 };
